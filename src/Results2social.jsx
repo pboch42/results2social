@@ -29,7 +29,7 @@ export default function Results2social() {
 
       const textElement = document.createElement('div');
       textElement.innerHTML = text;
-      const textLines = textElement.innerHTML.replace(/<br\s*\/?>/gi, '\n').split('\n');
+      const textLines = textElement.innerText.split('\n');
 
       ctx.fillStyle = 'white';
       ctx.font = '24px Arial';
@@ -54,14 +54,14 @@ export default function Results2social() {
     fetch('/api/spiele')
       .then((res) => res.json())
       .then((data) => {
-        if (!Array.isArray(data.data)) {
+        if (!Array.isArray(data.data.actualMatches)) {
           console.error('Unerwartetes API-Format:', data);
           return;
         }
 
-        setSpiele(data.data);
+        setSpiele(data.data.actualMatches);
 
-        const spieleText = data.data.map((spiel) => {
+        const spieleText = data.data.actualMatches.map((spiel) => {
           const datum = new Date(spiel.spielDate).toLocaleDateString();
           return `${datum}: ${spiel.vereinHeim} ${spiel.punkteHeim} - ${spiel.punkteGast} ${spiel.vereinGast}`;
         }).join('<br>');
