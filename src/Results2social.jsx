@@ -1,6 +1,4 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import { Editor } from '@tinymce/tinymce-react';
 
 export default function Results2social() {
@@ -69,8 +67,8 @@ export default function Results2social() {
 
   return (
     <div className="p-4 grid gap-4">
-      <Card>
-        <CardContent className="flex flex-col gap-4">
+      <div className="bg-white p-4 rounded shadow">
+        <div className="flex flex-col gap-4">
           <input type="file" accept="image/*" onChange={handleImageUpload} />
           {typeof window !== 'undefined' && (
             <Editor
@@ -87,10 +85,14 @@ export default function Results2social() {
               onEditorChange={(content) => setText(content)}
             />
           )}
-          <Button onClick={drawImageWithText}>Vorschau generieren</Button>
-          <Button onClick={downloadImage}>Bild herunterladen</Button>
-        </CardContent>
-      </Card>
+          <button onClick={drawImageWithText} className="bg-blue-500 text-white px-4 py-2 rounded">
+            Vorschau generieren
+          </button>
+          <button onClick={downloadImage} className="bg-green-500 text-white px-4 py-2 rounded">
+            Bild herunterladen
+          </button>
+        </div>
+      </div>
       <canvas ref={canvasRef} className="border rounded shadow" />
     </div>
   );
