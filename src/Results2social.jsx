@@ -54,6 +54,11 @@ export default function Results2social() {
     fetch('/api/spiele')
       .then((res) => res.json())
       .then((data) => {
+        if (!Array.isArray(data)) {
+          console.error('Unerwartetes API-Format:', data);
+          return;
+        }
+
         setSpiele(data);
 
         const spieleText = data.map((spiel) => {
@@ -62,7 +67,8 @@ export default function Results2social() {
         }).join('<br>');
 
         setText(`<p>${spieleText}</p>`);
-      });
+      })
+      .catch((err) => console.error('Fehler beim Laden der API:', err));
   }, []);
 
   return (
@@ -77,7 +83,7 @@ export default function Results2social() {
               init={{
                 height: 300,
                 menubar: false,
-                plugins: ['lists link image code'],
+                plugins: ['lists', 'link', 'image', 'code'],
                 toolbar:
                   'undo redo | formatselect | bold italic | alignleft aligncenter alignright | bullist numlist | link',
                 content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:14px }'
