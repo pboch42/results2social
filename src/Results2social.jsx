@@ -4,7 +4,6 @@ import { Editor } from '@tinymce/tinymce-react';
 export default function Results2social() {
   const [image, setImage] = useState(null);
   const [text, setText] = useState('');
-  const [spiele, setSpiele] = useState([]);
   const canvasRef = useRef(null);
 
   const handleImageUpload = (e) => {
@@ -54,19 +53,17 @@ export default function Results2social() {
     fetch('/api/spiele')
       .then((res) => res.json())
       .then((data) => {
-        if (!Array.isArray(data.actualMatches)) {
+        // API returns data object with 'data.matches' array
+        if (!data.data || !Array.isArray(data.data.matches)) {
           console.error('Unerwartetes API-Format:', data);
           return;
         }
-
-        setSpiele(data.actualMatches);
-
-        const spieleText = data.actualMatches.map((spiel) => {
+        const matches = data.data.matches;
+        const spieleText = matches.map((spiel) => {
           const datum = new Date(spiel.spielDate).toLocaleDateString();
           return `${datum}: ${spiel.vereinHeim} ${spiel.punkteHeim} - ${spiel.punkteGast} ${spiel.vereinGast}`;
         }).join('<br>');
-
-        setText(`<p>${spieleText}</p>`);
+        setText(spieleText);
       })
       .catch((err) => console.error('Fehler beim Laden der API:', err));
   }, []);
@@ -79,16 +76,14 @@ export default function Results2social() {
           {typeof window !== 'undefined' && (
             <Editor
               apiKey="p30gy5eeutuee4wn3lu2qhygp2z7mw3ds5xgsc08bji4nokn"
-              value={text}
+              initialValue={text}
               init={{
                 height: 300,
                 menubar: false,
                 plugins: ['lists', 'link', 'image', 'code'],
-                toolbar:
-                  'undo redo | formatselect | bold italic | alignleft aligncenter alignright | bullist numlist | link',
+                toolbar: 'undo redo | formatselect | bold italic | alignleft aligncenter alignright | bullist numlist | link',
                 content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:14px }'
               }}
-              onEditorChange={(content) => setText(content)}
             />
           )}
           <button onClick={drawImageWithText} className="bg-blue-500 text-white px-4 py-2 rounded">
