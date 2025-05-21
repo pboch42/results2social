@@ -1,5 +1,5 @@
 export default async function handler(req, res) {
-  const url = 'https://www.basketball-bund.net/rest/club/id/5156/actualmatches?justHome=false&rangeDays=8';
+  const url = 'https://www.basketball-bund.net/rest/club/id/4307/actualmatches?justHome=false&rangeDays=30';
 
   try {
     const response = await fetch(url);

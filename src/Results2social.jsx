@@ -1,17 +1,14 @@
 // === api/spiele.js ===
-// Serverless Function für Vercel: holt Spieldaten der letzten 60 Tage
+// Serverless Function für Vercel: Spieldaten der letzten 8 Tage für Verein 4307
 export default async function handler(req, res) {
-  // rangeDays aus Query-Parameter oder Standard 60 Tage
-  const rangeDays = req.query.rangeDays || 60;
-  const url = `https://www.basketball-bund.net/rest/club/id/5156/actualmatches?justHome=false&rangeDays=${rangeDays}`;
-
+  const url = 'https://www.basketball-bund.net/rest/club/id/4307/actualmatches?justHome=false&rangeDays=30';
   try {
     const response = await fetch(url);
     const payload = await response.json();
     res.setHeader('Access-Control-Allow-Origin', '*');
-    res.status(200).json(payload);
+    return res.status(200).json(payload);
   } catch (error) {
-    res.status(500).json({ error: 'Fehler beim Laden der Spieldaten' });
+    return res.status(500).json({ error: 'Fehler beim Laden der Spieldaten' });
   }
 }
 
@@ -36,7 +33,6 @@ export default function Results2social() {
   const drawImageWithText = () => {
     const canvas = canvasRef.current;
     if (!canvas || !image) return;
-
     const ctx = canvas.getContext('2d');
     const img = new Image();
     img.onload = () => {
@@ -47,7 +43,6 @@ export default function Results2social() {
       const textElement = document.createElement('div');
       textElement.innerHTML = text;
       const lines = textElement.innerText.split('\n');
-
       ctx.fillStyle = 'white';
       ctx.font = '24px Arial';
       let y = 40;
@@ -68,21 +63,20 @@ export default function Results2social() {
   };
 
   useEffect(() => {
-    // Optional: rangeDays per Query anpassen
-    fetch('/api/spiele?rangeDays=60')
+    fetch('/api/spiele')
       .then((res) => res.json())
       .then((data) => {
         if (!data.data || !Array.isArray(data.data.actualMatches)) {
           console.error('Unerwartetes API-Format:', data);
           return;
         }
-
         const matches = data.data.actualMatches;
-        const spieleText = matches.map((spiel) => {
-          const datum = new Date(spiel.spielDate).toLocaleDateString();
-          return `${datum}: ${spiel.vereinHeim} ${spiel.punkteHeim} - ${spiel.punkteGast} ${spiel.vereinGast}`;
-        }).join('<br>');
-
+        const spieleText = matches
+          .map((spiel) => {
+            const datum = new Date(spiel.spielDate).toLocaleDateString();
+            return `${datum}: ${spiel.vereinHeim} ${spiel.punkteHeim} - ${spiel.punkteGast} ${spiel.vereinGast}`;
+          })
+          .join('<br>');
         setText(spieleText);
       })
       .catch((err) => console.error('Fehler beim Laden der API:', err));
@@ -95,14 +89,16 @@ export default function Results2social() {
           <input type="file" accept="image/*" onChange={handleImageUpload} />
           {typeof window !== 'undefined' && (
             <Editor
-              apiKey="p30gy5eeutuee4wn3lu2qhygp2z7mw3ds5xgsc08bji4nokn"
+              apiKey="DEIN_API_KEY_HIER"
               value={text}
               init={{
                 height: 300,
                 menubar: false,
                 plugins: ['lists', 'link', 'image', 'code'],
-                toolbar: 'undo redo | formatselect | bold italic | alignleft aligncenter alignright | bullist numlist | link',
-                content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:14px }'
+                toolbar:
+                  'undo redo | formatselect | bold italic | alignleft aligncenter alignright | bullist numlist | link',
+                content_style:
+                  'body { font-family:Helvetica,Arial,sans-serif; font-size:14px }'
               }}
               onEditorChange={(content) => setText(content)}
             />
