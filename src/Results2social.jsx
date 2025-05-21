@@ -53,7 +53,7 @@ export default function Results2social() {
   };
 
   useEffect(() => {
-    fetch('https://www.basketball-bund.net/rest/club/id/5156/actualmatches?justHome=false&rangeDays=8')
+    fetch('/api/spiele')
       .then((res) => res.json())
       .then((data) => {
         setSpiele(data);
@@ -72,19 +72,21 @@ export default function Results2social() {
       <Card>
         <CardContent className="flex flex-col gap-4">
           <input type="file" accept="image/*" onChange={handleImageUpload} />
-          <Editor
-            apiKey="p30gy5eeutuee4wn3lu2qhygp2z7mw3ds5xgsc08bji4nokn"
-            value={text}
-            init={{
-              height: 300,
-              menubar: false,
-              plugins: ['lists link image code'],
-              toolbar:
-                'undo redo | formatselect | bold italic | alignleft aligncenter alignright | bullist numlist | link',
-              content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:14px }'
-            }}
-            onEditorChange={(content) => setText(content)}
-          />
+          {typeof window !== 'undefined' && (
+            <Editor
+              apiKey="p30gy5eeutuee4wn3lu2qhygp2z7mw3ds5xgsc08bji4nokn"
+              value={text}
+              init={{
+                height: 300,
+                menubar: false,
+                plugins: ['lists link image code'],
+                toolbar:
+                  'undo redo | formatselect | bold italic | alignleft aligncenter alignright | bullist numlist | link',
+                content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:14px }'
+              }}
+              onEditorChange={(content) => setText(content)}
+            />
+          )}
           <Button onClick={drawImageWithText}>Vorschau generieren</Button>
           <Button onClick={downloadImage}>Bild herunterladen</Button>
         </CardContent>
