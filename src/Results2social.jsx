@@ -75,7 +75,7 @@ export default function Results2social() {
           <input type="file" accept="image/*" onChange={handleImageUpload} />
           {typeof window !== 'undefined' && (
             <Editor
-              apiKey="DEIN_API_KEY_HIER"
+              apiKey="p30gy5eeutuee4wn3lu2qhygp2z7mw3ds5xgsc08bji4nokn"
               value={text}
               init={{
                 height: 300,
