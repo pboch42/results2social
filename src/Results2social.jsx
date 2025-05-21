@@ -70,7 +70,7 @@ export default function Results2social() {
       <div className="bg-white p-4 rounded shadow">
         <div className="flex flex-col gap-4">
           <input type="file" accept="image/*" onChange={handleImageUpload} />
-          {typeof window !== 'undefined' && text && (
+          {typeof window !== 'undefined' && (
             <Editor
               apiKey="p30gy5eeutuee4wn3lu2qhygp2z7mw3ds5xgsc08bji4nokn"
               initialValue={text}
