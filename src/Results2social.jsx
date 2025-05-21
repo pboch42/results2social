@@ -1,3 +1,21 @@
+// === api/spiele.js ===
+// Serverless Function für Vercel: holt Spieldaten der letzten 60 Tage
+export default async function handler(req, res) {
+  // rangeDays aus Query-Parameter oder Standard 60 Tage
+  const rangeDays = req.query.rangeDays || 60;
+  const url = `https://www.basketball-bund.net/rest/club/id/5156/actualmatches?justHome=false&rangeDays=${rangeDays}`;
+
+  try {
+    const response = await fetch(url);
+    const payload = await response.json();
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.status(200).json(payload);
+  } catch (error) {
+    res.status(500).json({ error: 'Fehler beim Laden der Spieldaten' });
+  }
+}
+
+// === src/Results2social.jsx ===
 import React, { useRef, useState, useEffect } from 'react';
 import { Editor } from '@tinymce/tinymce-react';
 
@@ -28,12 +46,12 @@ export default function Results2social() {
 
       const textElement = document.createElement('div');
       textElement.innerHTML = text;
-      const textLines = textElement.innerText.split('\n');
+      const lines = textElement.innerText.split('\n');
 
       ctx.fillStyle = 'white';
       ctx.font = '24px Arial';
       let y = 40;
-      textLines.forEach((line) => {
+      lines.forEach((line) => {
         ctx.fillText(line, 20, y);
         y += 30;
       });
@@ -50,19 +68,21 @@ export default function Results2social() {
   };
 
   useEffect(() => {
-    fetch('/api/spiele')
+    // Optional: rangeDays per Query anpassen
+    fetch('/api/spiele?rangeDays=60')
       .then((res) => res.json())
       .then((data) => {
-        // API returns data object with 'data.matches' array
-        if (!data.data || !Array.isArray(data.data.matches)) {
+        if (!data.data || !Array.isArray(data.data.actualMatches)) {
           console.error('Unerwartetes API-Format:', data);
           return;
         }
-        const matches = data.data.matches;
+
+        const matches = data.data.actualMatches;
         const spieleText = matches.map((spiel) => {
           const datum = new Date(spiel.spielDate).toLocaleDateString();
           return `${datum}: ${spiel.vereinHeim} ${spiel.punkteHeim} - ${spiel.punkteGast} ${spiel.vereinGast}`;
         }).join('<br>');
+
         setText(spieleText);
       })
       .catch((err) => console.error('Fehler beim Laden der API:', err));
@@ -76,7 +96,7 @@ export default function Results2social() {
           {typeof window !== 'undefined' && (
             <Editor
               apiKey="p30gy5eeutuee4wn3lu2qhygp2z7mw3ds5xgsc08bji4nokn"
-              initialValue={text}
+              value={text}
               init={{
                 height: 300,
                 menubar: false,
@@ -84,6 +104,7 @@ export default function Results2social() {
                 toolbar: 'undo redo | formatselect | bold italic | alignleft aligncenter alignright | bullist numlist | link',
                 content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:14px }'
               }}
+              onEditorChange={(content) => setText(content)}
             />
           )}
           <button onClick={drawImageWithText} className="bg-blue-500 text-white px-4 py-2 rounded">
