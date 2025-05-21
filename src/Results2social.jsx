@@ -54,7 +54,7 @@ export default function Results2social() {
     fetch('/api/spiele')
       .then((res) => res.json())
       .then((data) => {
-        if (!Array.isArray(data.data.actualMatches)) {
+        if (!Array.isArray(data.actualMatches)) {
           console.error('Unerwartetes API-Format:', data);
           return;
         }
