@@ -82,7 +82,6 @@ export default function Results2social() {
                   'undo redo | formatselect | bold italic | alignleft aligncenter alignright | bullist numlist | link',
                 content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:14px }'
               }}
-              onEditorChange={(content) => setText(content)}
             />
           )}
           <button onClick={drawImageWithText} className="bg-blue-500 text-white px-4 py-2 rounded">
