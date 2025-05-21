@@ -1,20 +1,13 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { EditorContent, useEditor } from '@tiptap/react';
-import StarterKit from '@tiptap/starter-kit';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Editor } from '@tinymce/tinymce-react';
 
 export default function Results2social() {
   const [image, setImage] = useState(null);
   const [text, setText] = useState('');
   const [spiele, setSpiele] = useState([]);
   const canvasRef = useRef(null);
-
-  const editor = useEditor({
-    extensions: [StarterKit],
-    content: '<p>Hier Ergebnisse einfügen...</p>',
-    onUpdate: ({ editor }) => {
-      setText(editor.getHTML());
-    },
-  });
 
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
@@ -70,18 +63,32 @@ export default function Results2social() {
           return `${datum}: ${spiel.vereinHeim} ${spiel.punkteHeim} - ${spiel.punkteGast} ${spiel.vereinGast}`;
         }).join('<br>');
 
-        if (editor) {
-          editor.commands.setContent(`<p>${spieleText}</p>`);
-        }
+        setText(`<p>${spieleText}</p>`);
       });
-  }, [editor]);
+  }, []);
 
   return (
     <div className="p-4 grid gap-4">
-      <input type="file" accept="image/*" onChange={handleImageUpload} />
-      <EditorContent editor={editor} className="border p-2 rounded bg-white text-black" />
-      <button onClick={drawImageWithText} className="bg-blue-500 text-white px-4 py-2 rounded">Vorschau generieren</button>
-      <button onClick={downloadImage} className="bg-green-500 text-white px-4 py-2 rounded">Bild herunterladen</button>
+      <Card>
+        <CardContent className="flex flex-col gap-4">
+          <input type="file" accept="image/*" onChange={handleImageUpload} />
+          <Editor
+            apiKey="p30gy5eeutuee4wn3lu2qhygp2z7mw3ds5xgsc08bji4nokn"
+            value={text}
+            init={{
+              height: 300,
+              menubar: false,
+              plugins: ['lists link image code'],
+              toolbar:
+                'undo redo | formatselect | bold italic | alignleft aligncenter alignright | bullist numlist | link',
+              content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:14px }'
+            }}
+            onEditorChange={(content) => setText(content)}
+          />
+          <Button onClick={drawImageWithText}>Vorschau generieren</Button>
+          <Button onClick={downloadImage}>Bild herunterladen</Button>
+        </CardContent>
+      </Card>
       <canvas ref={canvasRef} className="border rounded shadow" />
     </div>
   );
