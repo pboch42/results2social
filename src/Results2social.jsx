@@ -29,8 +29,7 @@ export default function Results2social() {
 
       const textElement = document.createElement('div');
       textElement.innerHTML = text;
-      const textLines = textElement.innerHTML.replace(/<br\\s*\\/?>/gi, '\\n').split('\\n');
-
+      const textLines = textElement.innerHTML.replace(/<br\s*\/?>/gi, '\n').split('\n');
 
       ctx.fillStyle = 'white';
       ctx.font = '24px Arial';
@@ -54,29 +53,15 @@ export default function Results2social() {
   useEffect(() => {
     fetch('/api/spiele')
       .then((res) => res.json())
-.then((data) => {
-  if (!Array.isArray(data.data)) {
-    console.error('Unerwartetes API-Format:', data);
-    return;
-  }
-
-  setSpiele(data.data);
-
-  const spieleText = data.data.map((spiel) => {
-    const datum = new Date(spiel.spielDate).toLocaleDateString();
-    return `${datum}: ${spiel.vereinHeim} ${spiel.punkteHeim} - ${spiel.punkteGast} ${spiel.vereinGast}`;
-  }).join('<br>');
-
-  setText(`<p>${spieleText}</p>`);
-})
-
+      .then((data) => {
+        if (!Array.isArray(data.data)) {
           console.error('Unerwartetes API-Format:', data);
           return;
         }
 
-        setSpiele(data);
+        setSpiele(data.data);
 
-        const spieleText = data.map((spiel) => {
+        const spieleText = data.data.map((spiel) => {
           const datum = new Date(spiel.spielDate).toLocaleDateString();
           return `${datum}: ${spiel.vereinHeim} ${spiel.punkteHeim} - ${spiel.punkteGast} ${spiel.vereinGast}`;
         }).join('<br>');
