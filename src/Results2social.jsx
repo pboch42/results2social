@@ -1,18 +1,3 @@
-// === api/spiele.js ===
-// Serverless Function für Vercel: Spieldaten der letzten 8 Tage für Verein 4307
-export default async function handler(req, res) {
-  const url = 'https://www.basketball-bund.net/rest/club/id/4307/actualmatches?justHome=false&rangeDays=30';
-  try {
-    const response = await fetch(url);
-    const payload = await response.json();
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    return res.status(200).json(payload);
-  } catch (error) {
-    return res.status(500).json({ error: 'Fehler beim Laden der Spieldaten' });
-  }
-}
-
-// === src/Results2social.jsx ===
 import React, { useRef, useState, useEffect } from 'react';
 import { Editor } from '@tinymce/tinymce-react';
 
@@ -43,6 +28,7 @@ export default function Results2social() {
       const textElement = document.createElement('div');
       textElement.innerHTML = text;
       const lines = textElement.innerText.split('\n');
+
       ctx.fillStyle = 'white';
       ctx.font = '24px Arial';
       let y = 40;
