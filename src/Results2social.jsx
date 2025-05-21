@@ -73,6 +73,7 @@ export default function Results2social() {
           {typeof window !== 'undefined' && (
             <Editor
               apiKey="p30gy5eeutuee4wn3lu2qhygp2z7mw3ds5xgsc08bji4nokn"
+              initialValue={text}
               value={text}
               init={{
                 height: 300,
