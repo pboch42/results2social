@@ -59,9 +59,9 @@ export default function Results2social() {
           return;
         }
 
-        setSpiele(data.data.actualMatches);
+        setSpiele(data.actualMatches);
 
-        const spieleText = data.data.actualMatches.map((spiel) => {
+        const spieleText = data.actualMatches.map((spiel) => {
           const datum = new Date(spiel.spielDate).toLocaleDateString();
           return `${datum}: ${spiel.vereinHeim} ${spiel.punkteHeim} - ${spiel.punkteGast} ${spiel.vereinGast}`;
         }).join('<br>');
