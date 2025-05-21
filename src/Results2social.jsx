@@ -1,3 +1,4 @@
+// === File: src/Results2social.jsx ===
 import React, { useRef, useState, useEffect } from 'react';
 import { Editor } from '@tinymce/tinymce-react';
 
@@ -18,6 +19,7 @@ export default function Results2social() {
   const drawImageWithText = () => {
     const canvas = canvasRef.current;
     if (!canvas || !image) return;
+
     const ctx = canvas.getContext('2d');
     const img = new Image();
     img.onload = () => {
@@ -52,11 +54,11 @@ export default function Results2social() {
     fetch('/api/spiele')
       .then((res) => res.json())
       .then((data) => {
-        if (!data.data || !Array.isArray(data.data.actualMatches)) {
+        if (!data.data || !Array.isArray(data.data.matches)) {
           console.error('Unerwartetes API-Format:', data);
           return;
         }
-        const matches = data.data.actualMatches;
+        const matches = data.data.matches;
         const spieleText = matches
           .map((spiel) => {
             const datum = new Date(spiel.spielDate).toLocaleDateString();
@@ -75,7 +77,7 @@ export default function Results2social() {
           <input type="file" accept="image/*" onChange={handleImageUpload} />
           {typeof window !== 'undefined' && (
             <Editor
-              apiKey="p30gy5eeutuee4wn3lu2qhygp2z7mw3ds5xgsc08bji4nokn"
+              apiKey="DEIN_API_KEY_HIER"
               value={text}
               init={{
                 height: 300,
