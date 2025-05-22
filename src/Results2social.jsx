@@ -59,10 +59,17 @@ export default function Results2social() {
           return;
         }
         const matches = data.data.matches;
+        console.log('Matches array:', matches);
+        if (matches.length > 0) console.log('First match object:', matches[0]);
         const spieleText = matches
           .map((spiel) => {
-            const datum = new Date(spiel.spielDate).toLocaleDateString();
-            return `${datum}: ${spiel.vereinHeim} ${spiel.punkteHeim} - ${spiel.punkteGast} ${spiel.vereinGast}`;
+            const dateValue = spiel.spielDate || spiel.matchDate || spiel.startDateTime;
+            const datum = new Date(dateValue).toLocaleDateString();
+            const heim = spiel.vereinHeim || spiel.homeTeamName || spiel.heimName || 'Heim';
+            const gast = spiel.vereinGast || spiel.gastTeamName || spiel.gastName || 'Gast';
+            const punkteHeim = spiel.punkteHeim || spiel.homeScore || 0;
+            const punkteGast = spiel.punkteGast || spiel.guestScore || 0;
+            return `${datum}: ${heim} ${punkteHeim} - ${punkteGast} ${gast}`;
           })
           .join('<br>');
         setText(spieleText);
