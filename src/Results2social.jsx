@@ -63,12 +63,18 @@ export default function Results2social() {
         if (matches.length > 0) console.log('First match object:', matches[0]);
         const spieleText = matches
           .map((spiel) => {
-            const dateValue = spiel.spielDate || spiel.matchDate || spiel.startDateTime;
-            const datum = new Date(dateValue).toLocaleDateString();
-            const heim = spiel.vereinHeim || spiel.homeTeamName || spiel.heimName || 'Heim';
-            const gast = spiel.vereinGast || spiel.gastTeamName || spiel.gastName || 'Gast';
-            const punkteHeim = spiel.punkteHeim || spiel.homeScore || 0;
-            const punkteGast = spiel.punkteGast || spiel.guestScore || 0;
+            // Datum und Uhrzeit kombinieren
+            const dateTime = `${spiel.kickoffDate}T${spiel.kickoffTime}`;
+            const datum = new Date(dateTime).toLocaleDateString();
+            // Ergebnis aufsplitten
+            let punkteHeim = 0, punkteGast = 0;
+            if (spiel.result) {
+              const parts = spiel.result.split(':');
+              punkteHeim = parseInt(parts[0], 10) || 0;
+              punkteGast = parseInt(parts[1], 10) || 0;
+            }
+            const heim = spiel.homeTeam?.teamname || 'Heim';
+            const gast = spiel.guestTeam?.teamname || 'Gast';
             return `${datum}: ${heim} ${punkteHeim} - ${punkteGast} ${gast}`;
           })
           .join('<br>');
