@@ -42,9 +42,10 @@ export default function Results2social() {
     }
   };
 
-  // Drag handlers
+  // Drag handlers (only start when clicking on handle)
   const onMouseDown = e => {
-    // Start dragging
+    // Only start drag if clicking the handle div itself
+    if (e.target !== e.currentTarget) return;
     e.preventDefault();
     setIsDragging(true);
     setDragOffset({ x: e.clientX - boxPos.x, y: e.clientY - boxPos.y });
@@ -81,8 +82,12 @@ export default function Results2social() {
             <div
               className="absolute"
               style={{ left: boxPos.x, top: boxPos.y, minWidth: '100px', background: 'rgba(0,0,0,0.5)', color: 'white', padding: '5px', cursor: 'grab' }}
-              onMouseDown={onMouseDown}
             >
+              {/* Drag handle at top */}
+              <div
+                onMouseDown={onMouseDown}
+                style={{ height: '20px', background: 'rgba(255,255,255,0.2)', cursor: 'grab' }}
+              />
               <Editor
                 apiKey="p30gy5eeutuee4wn3lu2qhygp2z7mw3ds5xgsc08bji4nokn"
                 inline
