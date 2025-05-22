@@ -5,7 +5,45 @@ import { Editor } from '@tinymce/tinymce-react';
 export default function Results2social() {
   const [image, setImage] = useState(null);
   const [text, setText] = useState('');
+  const [spiele, setSpiele] = useState([]);
+  const [rangeDays, setRangeDays] = useState(8);
+  const [homeOnly, setHomeOnly] = useState(false);
   const canvasRef = useRef(null);
+
+  const fetchSpiele = () => {
+    const url = `/api/spiele?justHome=${homeOnly}&rangeDays=${rangeDays}`;
+    fetch(url)
+      .then((res) => res.json())
+      .then((data) => {
+        if (!data.data || !Array.isArray(data.data.matches)) {
+          console.error('Unerwartetes API-Format:', data);
+          return;
+        }
+        const matches = data.data.matches;
+        setSpiele(matches);
+        const spieleText = matches
+          .map((spiel) => {
+            const dateTime = `${spiel.kickoffDate}T${spiel.kickoffTime}`;
+            const datum = new Date(dateTime).toLocaleDateString();
+            let punkteHeim = 0, punkteGast = 0;
+            if (spiel.result) {
+              const parts = spiel.result.split(':');
+              punkteHeim = parseInt(parts[0], 10) || 0;
+              punkteGast = parseInt(parts[1], 10) || 0;
+            }
+            const heim = spiel.homeTeam?.teamname || 'Heim';
+            const gast = spiel.guestTeam?.teamname || 'Gast';
+            return `${datum}: ${heim} ${punkteHeim} - ${punkteGast} ${gast}`;
+          })
+          .join('<br>');
+        setText(spieleText);
+      })
+      .catch((err) => console.error('Fehler beim Laden der API:', err));
+  };
+
+  useEffect(() => {
+    fetchSpiele();
+  }, [rangeDays, homeOnly]);
 
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
@@ -19,18 +57,15 @@ export default function Results2social() {
   const drawImageWithText = () => {
     const canvas = canvasRef.current;
     if (!canvas || !image) return;
-
     const ctx = canvas.getContext('2d');
     const img = new Image();
     img.onload = () => {
       canvas.width = img.width;
       canvas.height = img.height;
       ctx.drawImage(img, 0, 0);
-
       const textElement = document.createElement('div');
       textElement.innerHTML = text;
       const lines = textElement.innerText.split('\n');
-
       ctx.fillStyle = 'white';
       ctx.font = '24px Arial';
       let y = 40;
@@ -50,51 +85,46 @@ export default function Results2social() {
     link.click();
   };
 
-  useEffect(() => {
-    fetch('/api/spiele')
-      .then((res) => res.json())
-      .then((data) => {
-        if (!data.data || !Array.isArray(data.data.matches)) {
-          console.error('Unerwartetes API-Format:', data);
-          return;
-        }
-        const matches = data.data.matches;
-        console.log('Matches array:', matches);
-        if (matches.length > 0) console.log('First match object:', matches[0]);
-        const spieleText = matches
-          .map((spiel) => {
-            // Datum und Uhrzeit kombinieren
-            const dateTime = `${spiel.kickoffDate}T${spiel.kickoffTime}`;
-            const datum = new Date(dateTime).toLocaleDateString();
-            // Ergebnis aufsplitten
-            let punkteHeim = 0, punkteGast = 0;
-            if (spiel.result) {
-              const parts = spiel.result.split(':');
-              punkteHeim = parseInt(parts[0], 10) || 0;
-              punkteGast = parseInt(parts[1], 10) || 0;
-            }
-            const heim = spiel.homeTeam?.teamname || 'Heim';
-            const gast = spiel.guestTeam?.teamname || 'Gast';
-            return `${datum}: ${heim} ${punkteHeim} - ${punkteGast} ${gast}`;
-          })
-          .join('<br>');
-        setText(spieleText);
-      })
-      .catch((err) => console.error('Fehler beim Laden der API:', err));
-  }, []);
-
   return (
     <div className="p-4 grid gap-4">
+      <div className="bg-gray-100 p-4 rounded shadow">
+        <label>
+          Tage zurück:
+          <input
+            type="number"
+            value={rangeDays}
+            min={1}
+            max={60}
+            onChange={(e) => setRangeDays(Number(e.target.value))}
+            className="ml-2 p-1 border rounded w-16"
+          />
+        </label>
+        <label className="ml-4">
+          Nur Heimspiele:
+          <input
+            type="checkbox"
+            checked={homeOnly}
+            onChange={(e) => setHomeOnly(e.target.checked)}
+            className="ml-2"
+          />
+        </label>
+        <button
+          onClick={fetchSpiele}
+          className="ml-4 bg-yellow-500 text-white px-3 py-1 rounded"
+        >
+          Aktualisieren
+        </button>
+      </div>
       <div className="bg-white p-4 rounded shadow">
         <div className="flex flex-col gap-4">
           <input type="file" accept="image/*" onChange={handleImageUpload} />
           {typeof window !== 'undefined' && (
             <Editor
-              apiKey="p30gy5eeutuee4wn3lu2qhygp2z7mw3ds5xgsc08bji4nokn"
+              apiKey="DEIN_API_KEY_HIER"
               value={text}
               init={{
                 height: 300,
-                menubar: false,
+                menubar: true,
                 plugins: ['lists', 'link', 'image', 'code'],
                 toolbar:
                   'undo redo | formatselect | bold italic | alignleft aligncenter alignright | bullist numlist | link',
