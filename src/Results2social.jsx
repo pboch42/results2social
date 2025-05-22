@@ -1,12 +1,17 @@
+// === File: .env ===
+VITE_TINYMCE_API_KEY=p30gy5eeutuee4wn3lu2qhygp2z7mw3ds5xgsc08bji4nokn
+
 // === File: src/Results2social.jsx ===
 import React, { useRef, useState, useEffect } from 'react';
 import { Editor } from '@tinymce/tinymce-react';
 import html2canvas from 'html2canvas';
 
+// Lade TinyMCE API Key aus Umgebungsvariablen (Vite)
+const TINYMCE_API_KEY = import.meta.env.VITE_TINYMCE_API_KEY;
+
 export default function Results2social() {
   const [image, setImage] = useState(null);
   const [text, setText] = useState('');
-  const [spiele, setSpiele] = useState([]);
   const [rangeDays, setRangeDays] = useState(8);
   const [homeOnly, setHomeOnly] = useState(false);
   const [boxPos, setBoxPos] = useState({ x: 20, y: 40 });
@@ -42,7 +47,7 @@ export default function Results2social() {
     }
   };
 
-  // Drag handlers (only start when clicking on handle)
+  // Drag handlers
   const onMouseDown = e => {
     // Only start drag if clicking the handle div itself
     if (e.target !== e.currentTarget) return;
@@ -56,7 +61,7 @@ export default function Results2social() {
   };
   const onMouseUp = () => setIsDragging(false);
 
-  // Generate final image
+  // Generate final image via html2canvas
   const generateImage = () => {
     if (!containerRef.current) return;
     html2canvas(containerRef.current).then(canvas => {
@@ -69,7 +74,6 @@ export default function Results2social() {
 
   return (
     <div className="p-4" onMouseMove={onMouseMove} onMouseUp={onMouseUp}>
-      {/* Controls omitted for brevity */}
       <div className="bg-white p-4 rounded shadow">
         <input type="file" accept="image/*" onChange={handleImageUpload} />
         {image && (
@@ -83,13 +87,13 @@ export default function Results2social() {
               className="absolute"
               style={{ left: boxPos.x, top: boxPos.y, minWidth: '100px', background: 'rgba(0,0,0,0.5)', color: 'white', padding: '5px', cursor: 'grab' }}
             >
-              {/* Drag handle at top */}
+              {/* Drag handle */}
               <div
                 onMouseDown={onMouseDown}
                 style={{ height: '20px', background: 'rgba(255,255,255,0.2)', cursor: 'grab' }}
               />
               <Editor
-                apiKey="p30gy5eeutuee4wn3lu2qhygp2z7mw3ds5xgsc08bji4nokn"
+                apiKey={TINYMCE_API_KEY}
                 inline
                 value={text}
                 onEditorChange={setText}
