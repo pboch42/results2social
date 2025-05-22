@@ -43,8 +43,16 @@ export default function Results2social() {
   };
 
   // Drag handlers
-  const onMouseDown = e => { if (!e.target.classList.contains('editable')) return; setIsDragging(true); setDragOffset({ x: e.clientX - boxPos.x, y: e.clientY - boxPos.y }); };
-  const onMouseMove = e => { if (!isDragging) return; setBoxPos({ x: e.clientX - dragOffset.x, y: e.clientY - dragOffset.y }); };
+  const onMouseDown = e => {
+    // Start dragging
+    e.preventDefault();
+    setIsDragging(true);
+    setDragOffset({ x: e.clientX - boxPos.x, y: e.clientY - boxPos.y });
+  };
+  const onMouseMove = e => {
+    if (!isDragging) return;
+    setBoxPos({ x: e.clientX - dragOffset.x, y: e.clientY - dragOffset.y });
+  };
   const onMouseUp = () => setIsDragging(false);
 
   // Generate final image
@@ -64,11 +72,15 @@ export default function Results2social() {
       <div className="bg-white p-4 rounded shadow">
         <input type="file" accept="image/*" onChange={handleImageUpload} />
         {image && (
-          <div ref={containerRef} className="relative inline-block mt-4">
+          <div
+            ref={containerRef}
+            className="relative inline-block mt-4"
+            style={{ cursor: isDragging ? 'grabbing' : 'default' }}
+          >
             <img src={image} alt="Hintergrund" className="max-w-full" />
             <div
-              className="absolute editable"
-              style={{ left: boxPos.x, top: boxPos.y, minWidth: '100px', background: 'rgba(0,0,0,0.5)', color: 'white', padding: '5px' }}
+              className="absolute"
+              style={{ left: boxPos.x, top: boxPos.y, minWidth: '100px', background: 'rgba(0,0,0,0.5)', color: 'white', padding: '5px', cursor: 'grab' }}
               onMouseDown={onMouseDown}
             >
               <Editor
