@@ -1,6 +1,3 @@
-// === File: .env ===
-VITE_TINYMCE_API_KEY=p30gy5eeutuee4wn3lu2qhygp2z7mw3ds5xgsc08bji4nokn
-
 // === File: src/Results2social.jsx ===
 import React, { useRef, useState, useEffect } from 'react';
 import { Editor } from '@tinymce/tinymce-react';
