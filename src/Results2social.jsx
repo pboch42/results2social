@@ -44,12 +44,10 @@ export default function Results2social() {
   // Inhalte basierend auf Auswahl generieren
   const buildText = () => {
     const html = matches.map(match => {
-      // Datum und Zeit vorbereiten
       const dateTime = `${match.kickoffDate}T${match.kickoffTime}`;
       const datum = new Date(dateTime).toLocaleDateString();
       const time = new Date(dateTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
       const context = { ...match, datum, time, ligaData: leagueData || {} };
-      // Baue Zeile
       const parts = selectedFields.map(field => getValue(context, field));
       return `<p>${parts.join(' • ')}</p>`;
     }).join('');
@@ -132,7 +130,7 @@ export default function Results2social() {
             <img src={image} alt="Hintergrund" className="max-w-full" />
             <div
               className="absolute"
-              style={{ left: boxPos.x, top: boxPos.y, minWidth: '150px', background: 'rgba(0,0,0,0.5)', color: 'white', padding: '5px', cursor: 'grab' }}
+              style={{ left: boxPos.x, top: boxPos.y, minWidth: '150px', background: 'transparent', color: 'white', padding: '5px', cursor: 'grab' }}
               onMouseDown={onMouseDown}
             >
               <Editor
@@ -143,8 +141,9 @@ export default function Results2social() {
                 init={{
                   menubar: true,
                   toolbar: 'undo redo | bold italic underline | alignleft aligncenter alignright | bullist numlist',
-                  content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:16px; color:white; }',
-                  plugins: ['lists', 'link']
+                  plugins: ['lists', 'link'],
+                  skin: false,
+                  content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:16px; color:white; background: transparent !important; }'
                 }}
               />
             </div>
