@@ -103,19 +103,34 @@ export default function Results2social() {
   };
 
   return (
-    <div
+    <div className="p-4" onMouseMove={onMouseMove} onMouseUp={onMouseUp}>
+      {/* Feld-Auswahl */}
+      <div className="mb-4">
+        <label className="block mb-1">Felder auswählen (Reihenfolge via Strg+Klick):</label>
+        <select
+          multiple
+          value={selectedFields}
+          onChange={e => setSelectedFields([...e.target.selectedOptions].map(o => o.value))}
+          className="border p-2 rounded w-full h-24"
+        >
+          {FIELD_OPTIONS.map(opt => (
+            <option key={opt.value} value={opt.value}>{opt.label}</option>
+          ))}
+        </select>
+      </div>
+      {/* Bild und Editor Overlay */}
+      <div className="bg-white p-4 rounded shadow mb-4">
+        <input type="file" accept="image/*" onChange={handleImageUpload} />
+        {image && (
+          <div
+            ref={containerRef}
+            className="relative inline-block mt-4"
+            style={{ cursor: isDragging ? 'grabbing' : 'default' }}
+          >
+            <img src={image} alt="Hintergrund" className="max-w-full" />
+            <div
               className="absolute"
-              style={{
-                left: boxPos.x,
-                top: boxPos.y,
-                minWidth: '150px',
-                minHeight: '100px',
-                border: '1px dashed white',
-                background: 'transparent',
-                color: 'white',
-                padding: '5px',
-                cursor: 'grab'
-              }}
+              style={{ left: boxPos.x, top: boxPos.y, minWidth: '150px', background: 'transparent', color: 'white', padding: '5px', cursor: 'grab' }}
               onMouseDown={onMouseDown}
             >
               <Editor
