@@ -90,7 +90,7 @@ export default function Results2social() {
             <div
               onMouseDown={onMouseDown}
               className="absolute border-dashed border-2 border-white"
-              style={{ left: boxPos.x, top: boxPos.y, minWidth:150, minHeight:100, background:'transparent', cursor:isDragging?'grabbing':'grab' }}
+              style={{ left: boxPos.x, top: boxPos.y, minWidth:150, minHeight:100, background:'rgba(0,0,0,0.5)', cursor:isDragging?'grabbing':'grab' }}
             >
               <Editor
                 apiKey={TINYMCE_API_KEY}
