@@ -20,19 +20,13 @@ export default function Results2social() {
   const [matches, setMatches] = useState([]);
   const [leagueData, setLeagueData] = useState(null);
   const [text, setText] = useState('');
-  const [selectedFields, setSelectedFields] = useState([
-    'datum',
-    'homeTeam.teamnameSmall',
-    'result',
-    'guestTeam.teamnameSmall'
-  ]);
+  const [selectedFields, setSelectedFields] = useState([ 'datum', 'homeTeam.teamnameSmall', 'result', 'guestTeam.teamnameSmall' ]);
   const [rangeDays, setRangeDays] = useState(8);
   const [homeOnly, setHomeOnly] = useState(false);
   const [boxPos, setBoxPos] = useState({ x: 20, y: 40 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const containerRef = useRef(null);
-  const overlayRef = useRef(null);
 
   const getValue = (obj, path) => path.split('.').reduce((o, k) => o?.[k] ?? '', obj);
 
@@ -74,30 +68,18 @@ export default function Results2social() {
   const onMouseUp = () => setIsDragging(false);
 
   const generateImage = () => {
-    if (!containerRef.current || !overlayRef.current) return;
-    // Temporarily hide overlay background for screenshot
-    const origBg = overlayRef.current.style.background;
-    overlayRef.current.style.background = 'transparent';
+    if (!containerRef.current) return;
     html2canvas(containerRef.current).then(canvas => {
-      const link = document.createElement('a');
-      link.download = 'ergebnis_poster.png';
-      link.href = canvas.toDataURL();
-      link.click();
-    }).finally(() => {
-      overlayRef.current.style.background = origBg;
+      const link = document.createElement('a'); link.download='ergebnis_poster.png'; link.href=canvas.toDataURL(); link.click();
     });
   };
 
   return (
     <div className="p-4" onMouseMove={onMouseMove} onMouseUp={onMouseUp}>
+      {/* Controls */}
       <div className="mb-4">
-        <select
-          multiple
-          value={selectedFields}
-          onChange={e => setSelectedFields([...e.target.selectedOptions].map(o => o.value))}
-          className="border p-2 rounded w-full h-24"
-        >
-          {FIELD_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+        <select multiple value={selectedFields} onChange={e=>setSelectedFields([...e.target.selectedOptions].map(o=>o.value))} className="border p-2 rounded w-full h-24">
+          {FIELD_OPTIONS.map(o=><option key={o.value} value={o.value}>{o.label}</option>)}
         </select>
       </div>
       <div className="bg-white p-4 rounded shadow mb-4">
@@ -106,37 +88,20 @@ export default function Results2social() {
           <div ref={containerRef} className="relative inline-block mt-4">
             <img src={image} alt="Hintergrund" className="max-w-full" />
             <div
-              ref={overlayRef}
               onMouseDown={onMouseDown}
               className="absolute border-dashed border-2 border-white"
-              style={{
-                left: boxPos.x,
-                top: boxPos.y,
-                minWidth: 150,
-                minHeight: 100,
-                background: 'rgba(0,0,0,0.5)',
-                cursor: isDragging ? 'grabbing' : 'grab'
-              }}
+              style={{ left: boxPos.x, top: boxPos.y, minWidth:150, minHeight:100, background:'rgba(0,0,0,0.5)', cursor:isDragging?'grabbing':'grab' }}
             >
               <Editor
                 apiKey={TINYMCE_API_KEY}
-                inline
-                value={text}
-                onEditorChange={setText}
-                init={{
-                  menubar: true,
-                  toolbar: 'undo redo | bold italic underline | alignleft aligncenter alignright | bullist numlist',
-                  plugins: ['lists', 'link'],
-                  content_style: 'body{color:#fff; background:transparent; font-size:16px;}'
-                }}
+                inline value={text} onEditorChange={setText}
+                init={{ menubar:true, toolbar:'undo redo | bold italic underline | alignleft aligncenter alignright | bullist numlist', plugins:['lists','link'], content_style:'body{color:#fff;background:transparent;font-size:16px;}' }}
               />
             </div>
           </div>
         )}
       </div>
-      <button onClick={generateImage} className="bg-blue-600 text-white px-4 py-2 rounded">
-        Fertiges Bild herunterladen
-      </button>
+      <button onClick={generateImage} className="bg-blue-600 text-white px-4 py-2 rounded">Fertiges Bild herunterladen</button>
     </div>
   );
 }
