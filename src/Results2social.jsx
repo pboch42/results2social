@@ -89,15 +89,20 @@ export default function Results2social() {
   // Screenshot mit transparentem Overlay-Hintergrund
   const generateImage = () => {
     if (!containerRef.current || !overlayRef.current) return;
+    // Temporär Overlay-Hintergrund und Border ausblenden
     const origBg = overlayRef.current.style.background;
+    const origBorder = overlayRef.current.style.border;
     overlayRef.current.style.background = 'transparent';
+    overlayRef.current.style.border = 'none';
     html2canvas(containerRef.current).then(canvas => {
       const link = document.createElement('a');
       link.download = 'ergebnis_poster.png';
       link.href = canvas.toDataURL();
       link.click();
     }).finally(() => {
+      // Ursprüngliche Styles wiederherstellen
       overlayRef.current.style.background = origBg;
+      overlayRef.current.style.border = origBorder;
     });
   };
 
