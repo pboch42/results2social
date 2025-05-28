@@ -3,7 +3,10 @@ import React, { useRef, useState, useEffect } from 'react';
 import { Editor } from '@tinymce/tinymce-react';
 import html2canvas from 'html2canvas';
 
+// TinyMCE API-Key aus Umgebungsvariablen
 const TINYMCE_API_KEY = import.meta.env.VITE_TINYMCE_API_KEY;
+
+// Feldoptionen für Editor
 const FIELD_OPTIONS = [
   { label: 'Datum', value: 'datum' },
   { label: 'Uhrzeit', value: 'time' },
@@ -12,13 +15,12 @@ const FIELD_OPTIONS = [
   { label: 'Heim-Kurz', value: 'homeTeam.teamnameSmall' },
   { label: 'Gast-Kurz', value: 'guestTeam.teamnameSmall' },
   { label: 'Ergebnis', value: 'result' },
-  { label: 'Liga', value: 'leagueData.liganame' }
+  { label: 'Liga', value: 'ligaData.liganame' }
 ];
 
 export default function Results2social() {
   const [image, setImage] = useState(null);
   const [matches, setMatches] = useState([]);
-  const [leagueData, setLeagueData] = useState(null);
   const [text, setText] = useState('');
   const [selectedFields, setSelectedFields] = useState([
     'datum', 'homeTeam.teamnameSmall', 'result', 'guestTeam.teamnameSmall'
@@ -41,7 +43,6 @@ export default function Results2social() {
       .then(data => {
         const arr = data.data?.matches || [];
         setMatches(arr);
-        setLeagueData(data.data?.ligaData || null);
       })
       .catch(err => console.error('API error:', err));
   }, [homeOnly, rangeDays]);
@@ -54,13 +55,13 @@ export default function Results2social() {
         ...match,
         datum: dt.toLocaleDateString(),
         time: dt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-        leagueData
+        ligaData: match.ligaData
       };
       const parts = selectedFields.map(field => getValue(context, field));
       return `<p>${parts.join(' • ')}</p>`;
     });
     setText(htmlParts.join(''));
-  }, [matches, selectedFields, leagueData]);
+  }, [matches, selectedFields]);
 
   // Bild-Upload
   const handleImageUpload = e => {
@@ -72,9 +73,8 @@ export default function Results2social() {
     }
   };
 
-  // Drag-Events nur auf Overlay
+  // Drag-Events
   const onMouseDown = e => {
-    if (e.target !== overlayRef.current) return;
     e.preventDefault();
     setIsDragging(true);
     setDragOffset({ x: e.clientX - boxPos.x, y: e.clientY - boxPos.y });
