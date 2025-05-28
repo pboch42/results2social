@@ -14,7 +14,7 @@ const FIELD_OPTIONS = [
   { label: 'Heim-Kurz', value: 'homeTeam.teamnameSmall' },
   { label: 'Gast-Kurz', value: 'guestTeam.teamnameSmall' },
   { label: 'Ergebnis', value: 'result' },
-  { label: 'Liga', value: 'ligaData: leagueData.liganame' }
+  { label: 'Liga', value: 'leagueData.liganame' }
 ];
 
 export default function Results2social() {
@@ -51,7 +51,12 @@ export default function Results2social() {
   useEffect(() => {
     const html = matches.map(match => {
       const dt = new Date(`${match.kickoffDate}T${match.kickoffTime}`);
-      const context = { ...match, datum: dt.toLocaleDateString(), time: dt.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}), ligaData };
+      const context = { ...match, datum: dt.toLocaleDateString(), time: dt.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}), leagueData };
+      const parts = selectedFields.map(f => getValue(context, f));
+      return `<p>${parts.join(' • ')}</p>`;
+    });
+    const htmlString = html.join('');
+    setText(htmlString);
       const parts = selectedFields.map(f => getValue(context, f));
       return `<p>${parts.join(' • ')}</p>`;
     }).join('');
