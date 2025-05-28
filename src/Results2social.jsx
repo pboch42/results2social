@@ -1,12 +1,8 @@
 // === File: src/Results2social.jsx ===
 import React, { useRef, useState, useEffect } from 'react';
 import { Editor } from '@tinymce/tinymce-react';
-import html2canvas from 'html2canvas';
 
-// Lade TinyMCE API Key aus Umgebungsvariablen (Vite)
 const TINYMCE_API_KEY = import.meta.env.VITE_TINYMCE_API_KEY;
-
-// Feldoptionen für Editor
 const FIELD_OPTIONS = [
   { label: 'Datum', value: 'datum' },
   { label: 'Uhrzeit', value: 'time' },
@@ -31,45 +27,29 @@ export default function Results2social() {
   ]);
   const [rangeDays, setRangeDays] = useState(8);
   const [homeOnly, setHomeOnly] = useState(false);
-  const [boxPos, setBoxPos] = useState({ x: 20, y: 40 });
-  const [isDragging, setIsDragging] = useState(false);
-  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
-  const containerRef = useRef(null);
+  const canvasRef = useRef(null);
 
-  // Hilfsfunktion für verschachtelte Felder
-  const getValue = (obj, path) => {
-    return path.split('.').reduce((o, key) => (o && o[key] != null ? o[key] : ''), obj);
-  };
+  const getValue = (obj, path) => path.split('.').reduce((o, k) => o?.[k] ?? '', obj);
 
-  // Inhalte basierend auf Auswahl generieren
-  const buildText = () => {
-    const html = matches.map(match => {
-      // Datum und Zeit vorbereiten
-      const dateTime = `${match.kickoffDate}T${match.kickoffTime}`;
-      const datum = new Date(dateTime).toLocaleDateString();
-      const time = new Date(dateTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      const context = { ...match, datum, time, ligaData: leagueData || {} };
-      // Baue Zeile
-      const parts = selectedFields.map(field => getValue(context, field));
-      return `<p>${parts.join(' • ')}</p>`;
-    }).join('');
-    setText(html);
-  };
-
-  // Fetch matches & leagueData
   useEffect(() => {
     fetch(`/api/spiele?justHome=${homeOnly}&rangeDays=${rangeDays}`)
-      .then(res => res.json())
+      .then(r => r.json())
       .then(data => {
-        if (!data.data || !Array.isArray(data.data.matches)) return;
-        setMatches(data.data.matches);
-        setLeagueData(data.data.ligaData);
-      })
-      .catch(err => console.error('API error:', err));
-  }, [rangeDays, homeOnly]);
+        const arr = data.data?.matches || [];
+        setMatches(arr);
+        setLeagueData(data.data?.ligaData || null);
+      });
+  }, [homeOnly, rangeDays]);
 
-  // Rebuild text when matches or fields change
-  useEffect(() => buildText(), [matches, selectedFields]);
+  useEffect(() => {
+    const html = matches.map(match => {
+      const dt = new Date(`${match.kickoffDate}T${match.kickoffTime}`);
+      const context = { ...match, datum: dt.toLocaleDateString(), time: dt.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}), ligaData };
+      const parts = selectedFields.map(f => getValue(context, f));
+      return parts.join(' • ');
+    }).join('\n');
+    setText(html);
+  }, [matches, selectedFields, leagueData]);
 
   const handleImageUpload = e => {
     const file = e.target.files[0];
@@ -80,80 +60,76 @@ export default function Results2social() {
     }
   };
 
-  // Drag handlers
-  const onMouseDown = e => {
-    if (e.target !== e.currentTarget) return;
-    e.preventDefault();
-    setIsDragging(true);
-    setDragOffset({ x: e.clientX - boxPos.x, y: e.clientY - boxPos.y });
+  const drawImageWithText = () => {
+    const canvas = canvasRef.current;
+    if (!canvas || !image) return;
+    const ctx = canvas.getContext('2d');
+    const img = new Image();
+    img.onload = () => {
+      canvas.width = img.width;
+      canvas.height = img.height;
+      ctx.drawImage(img, 0, 0);
+      ctx.fillStyle = 'white';
+      ctx.font = '24px Arial';
+      const lines = text.split('\n');
+      let y = 40;
+      lines.forEach(line => {
+        ctx.fillText(line, 20, y);
+        y += 30;
+      });
+    };
+    img.src = image;
   };
-  const onMouseMove = e => {
-    if (!isDragging) return;
-    setBoxPos({ x: e.clientX - dragOffset.x, y: e.clientY - dragOffset.y });
-  };
-  const onMouseUp = () => setIsDragging(false);
 
-  // Finales Bild generieren
-  const generateImage = () => {
-    if (!containerRef.current) return;
-    html2canvas(containerRef.current).then(canvas => {
-      const link = document.createElement('a');
-      link.download = 'ergebnis_poster.png';
-      link.href = canvas.toDataURL();
-      link.click();
-    });
+  const downloadImage = () => {
+    const canvas = canvasRef.current;
+    const link = document.createElement('a');
+    link.download = 'ergebnisse.png';
+    link.href = canvas.toDataURL();
+    link.click();
   };
 
   return (
-    <div className="p-4" onMouseMove={onMouseMove} onMouseUp={onMouseUp}>
+    <div className="p-4 grid gap-4">
       {/* Feld-Auswahl */}
       <div className="mb-4">
-        <label className="block mb-1">Felder auswählen (Reihenfolge via Strg+Klick):</label>
         <select
           multiple
           value={selectedFields}
           onChange={e => setSelectedFields([...e.target.selectedOptions].map(o => o.value))}
           className="border p-2 rounded w-full h-24"
         >
-          {FIELD_OPTIONS.map(opt => (
-            <option key={opt.value} value={opt.value}>{opt.label}</option>
-          ))}
+          {FIELD_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
         </select>
       </div>
-      {/* Bild und Editor Overlay */}
-      <div className="bg-white p-4 rounded shadow mb-4">
+
+      {/* Uploader & Editor */}
+      <div className="bg-white p-4 rounded shadow">
         <input type="file" accept="image/*" onChange={handleImageUpload} />
         {image && (
-          <div
-            ref={containerRef}
-            className="relative inline-block mt-4"
-            style={{ cursor: isDragging ? 'grabbing' : 'default' }}
-          >
-            <img src={image} alt="Hintergrund" className="max-w-full" />
-            <div
-              className="absolute"
-              style={{ left: boxPos.x, top: boxPos.y, minWidth: '150px', background: 'rgba(0,0,0,0.5)', color: 'white', padding: '5px', cursor: 'grab' }}
-              onMouseDown={onMouseDown}
-            >
-              <Editor
-                apiKey={TINYMCE_API_KEY}
-                inline
-                value={text}
-                onEditorChange={setText}
-                init={{
-                  menubar: true,
-                  toolbar: 'undo redo | bold italic underline | alignleft aligncenter alignright | bullist numlist',
-                  content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:16px; color:white; }',
-                  plugins: ['lists', 'link']
-                }}
-              />
-            </div>
+          <div className="flex flex-col gap-4 mt-4">
+            <Editor
+              apiKey={TINYMCE_API_KEY}
+              init={{
+                height: 200,
+                menubar: true,
+                toolbar: 'undo redo | bold italic underline | alignleft aligncenter alignright | bullist numlist',
+                plugins: ['lists', 'link'],
+                content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:16px; }'
+              }}
+              value={text}
+              onEditorChange={setText}
+            />
+            <button onClick={drawImageWithText} className="bg-blue-500 text-white px-4 py-2 rounded">
+              Vorschau generieren
+            </button>
+            <button onClick={downloadImage} className="bg-green-500 text-white px-4 py-2 rounded">
+              Fertiges Bild herunterladen
+            </button>
+            <canvas ref={canvasRef} className="border rounded shadow" />
           </div>
         )}
       </div>
-      <button onClick={generateImage} className="bg-blue-600 text-white px-4 py-2 rounded">
-        Fertiges Bild herunterladen
-      </button>
     </div>
   );
 }
