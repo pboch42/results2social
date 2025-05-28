@@ -14,7 +14,7 @@ const FIELD_OPTIONS = [
   { label: 'Heim-Kurz', value: 'homeTeam.teamnameSmall' },
   { label: 'Gast-Kurz', value: 'guestTeam.teamnameSmall' },
   { label: 'Ergebnis', value: 'result' },
-  { label: 'Liga', value: 'ligaData.liganame' }
+  { label: 'Liga', value: 'ligaData: leagueData.liganame' }
 ];
 
 export default function Results2social() {
