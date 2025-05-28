@@ -3,9 +3,7 @@ import React, { useRef, useState, useEffect } from 'react';
 import { Editor } from '@tinymce/tinymce-react';
 import html2canvas from 'html2canvas';
 
-// TinyMCE API-Key aus Umgebungsvariablen
 const TINYMCE_API_KEY = import.meta.env.VITE_TINYMCE_API_KEY;
-// Feldoptionen für die Textgenerierung
 const FIELD_OPTIONS = [
   { label: 'Datum', value: 'datum' },
   { label: 'Uhrzeit', value: 'time' },
@@ -34,7 +32,7 @@ export default function Results2social() {
   const overlayRef = useRef(null);
 
   // Helper für verschachtelte Pfade
-  const getValue = (obj, path) => path.split('.').reduce((o, k) => o?.[k] ?? '', obj);
+  const getValue = (obj, path) => path.split('.').reduce((o, k) => (o && o[k] != null ? o[k] : ''), obj);
 
   // API-Aufruf
   useEffect(() => {
@@ -44,23 +42,24 @@ export default function Results2social() {
         const arr = data.data?.matches || [];
         setMatches(arr);
         setLeagueData(data.data?.ligaData || null);
-      });
+      })
+      .catch(err => console.error('API error:', err));
   }, [homeOnly, rangeDays]);
 
   // Text bei Daten- oder Feldänderung neu bauen
   useEffect(() => {
-    const html = matches.map(match => {
+    const htmlParts = matches.map(match => {
       const dt = new Date(`${match.kickoffDate}T${match.kickoffTime}`);
-      const context = { ...match, datum: dt.toLocaleDateString(), time: dt.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}), leagueData };
-      const parts = selectedFields.map(f => getValue(context, f));
+      const context = {
+        ...match,
+        datum: dt.toLocaleDateString(),
+        time: dt.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        leagueData
+      };
+      const parts = selectedFields.map(field => getValue(context, field));
       return `<p>${parts.join(' • ')}</p>`;
     });
-    const htmlString = html.join('');
-    setText(htmlString);
-      const parts = selectedFields.map(f => getValue(context, f));
-      return `<p>${parts.join(' • ')}</p>`;
-    }).join('');
-    setText(html);
+    setText(htmlParts.join(''));
   }, [matches, selectedFields, leagueData]);
 
   // Bild-Upload
@@ -80,7 +79,11 @@ export default function Results2social() {
     setIsDragging(true);
     setDragOffset({ x: e.clientX - boxPos.x, y: e.clientY - boxPos.y });
   };
-  const onMouseMove = e => isDragging && setBoxPos({ x: e.clientX - dragOffset.x, y: e.clientY - dragOffset.y });
+  const onMouseMove = e => {
+    if (isDragging) {
+      setBoxPos({ x: e.clientX - dragOffset.x, y: e.clientY - dragOffset.y });
+    }
+  };
   const onMouseUp = () => setIsDragging(false);
 
   // Screenshot mit transparentem Overlay-Hintergrund
@@ -102,8 +105,15 @@ export default function Results2social() {
     <div className="p-4" onMouseMove={onMouseMove} onMouseUp={onMouseUp}>
       {/* Feld-Auswahl */}
       <div className="mb-4">
-        <select multiple value={selectedFields} onChange={e => setSelectedFields([...e.target.selectedOptions].map(o => o.value))} className="border p-2 rounded w-full h-24">
-          {FIELD_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+        <select
+          multiple
+          value={selectedFields}
+          onChange={e => setSelectedFields([...e.target.selectedOptions].map(o => o.value))}
+          className="border p-2 rounded w-full h-24"
+        >
+          {FIELD_OPTIONS.map(opt => (
+            <option key={opt.value} value={opt.value}>{opt.label}</option>
+          ))}
         </select>
       </div>
       {/* Upload & Overlay */}
@@ -112,13 +122,31 @@ export default function Results2social() {
         {image && (
           <div ref={containerRef} className="relative inline-block mt-4">
             <img src={image} alt="Hintergrund" className="max-w-full" />
-            <div ref={overlayRef} onMouseDown={onMouseDown} className="absolute" style={{ left: boxPos.x, top: boxPos.y, minWidth:150, background:'rgba(0,0,0,0.5)', cursor: isDragging ? 'grabbing' : 'grab' }}>
-              <Editor apiKey={TINYMCE_API_KEY} inline value={text} onEditorChange={setText} init={{ menubar:true, toolbar:'undo redo | bold italic underline | alignleft aligncenter alignright | bullist numlist', plugins:['lists','link'], content_style:'body{color:#fff;background:transparent;font-size:16px;}' }} />
+            <div
+              ref={overlayRef}
+              onMouseDown={onMouseDown}
+              className="absolute border-dashed border-2 border-white"
+              style={{ left: boxPos.x, top: boxPos.y, minWidth: 150, minHeight: 100, background: 'rgba(0,0,0,0.5)', cursor: isDragging ? 'grabbing' : 'grab' }}
+            >
+              <Editor
+                apiKey={TINYMCE_API_KEY}
+                inline
+                value={text}
+                onEditorChange={setText}
+                init={{
+                  menubar: true,
+                  toolbar: 'undo redo | bold italic underline | alignleft aligncenter alignright | bullist numlist',
+                  plugins: ['lists', 'link'],
+                  content_style: 'body { color: #fff; background: transparent; font-size: 16px; }'
+                }}
+              />
             </div>
           </div>
         )}
       </div>
-      <button onClick={generateImage} className="bg-blue-600 text-white px-4 py-2 rounded"> Fertiges Bild herunterladen </button>
+      <button onClick={generateImage} className="bg-blue-600 text-white px-4 py-2 rounded">
+        Fertiges Bild herunterladen
+      </button>
     </div>
   );
 }
