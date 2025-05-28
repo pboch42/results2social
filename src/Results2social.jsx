@@ -1,8 +1,11 @@
 // === File: src/Results2social.jsx ===
 import React, { useRef, useState, useEffect } from 'react';
 import { Editor } from '@tinymce/tinymce-react';
+import html2canvas from 'html2canvas';
 
+// TinyMCE API-Key aus Umgebungsvariablen
 const TINYMCE_API_KEY = import.meta.env.VITE_TINYMCE_API_KEY;
+// Feldoptionen für die Textgenerierung
 const FIELD_OPTIONS = [
   { label: 'Datum', value: 'datum' },
   { label: 'Uhrzeit', value: 'time' },
@@ -20,20 +23,23 @@ export default function Results2social() {
   const [leagueData, setLeagueData] = useState(null);
   const [text, setText] = useState('');
   const [selectedFields, setSelectedFields] = useState([
-    'datum',
-    'homeTeam.teamnameSmall',
-    'result',
-    'guestTeam.teamnameSmall'
+    'datum', 'homeTeam.teamnameSmall', 'result', 'guestTeam.teamnameSmall'
   ]);
   const [rangeDays, setRangeDays] = useState(8);
   const [homeOnly, setHomeOnly] = useState(false);
-  const canvasRef = useRef(null);
+  const [boxPos, setBoxPos] = useState({ x: 20, y: 40 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const containerRef = useRef(null);
+  const overlayRef = useRef(null);
 
+  // Helper für verschachtelte Pfade
   const getValue = (obj, path) => path.split('.').reduce((o, k) => o?.[k] ?? '', obj);
 
+  // API-Aufruf
   useEffect(() => {
     fetch(`/api/spiele?justHome=${homeOnly}&rangeDays=${rangeDays}`)
-      .then(r => r.json())
+      .then(res => res.json())
       .then(data => {
         const arr = data.data?.matches || [];
         setMatches(arr);
@@ -41,16 +47,18 @@ export default function Results2social() {
       });
   }, [homeOnly, rangeDays]);
 
+  // Text bei Daten- oder Feldänderung neu bauen
   useEffect(() => {
     const html = matches.map(match => {
       const dt = new Date(`${match.kickoffDate}T${match.kickoffTime}`);
       const context = { ...match, datum: dt.toLocaleDateString(), time: dt.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}), ligaData };
       const parts = selectedFields.map(f => getValue(context, f));
-      return parts.join(' • ');
-    }).join('\n');
+      return `<p>${parts.join(' • ')}</p>`;
+    }).join('');
     setText(html);
   }, [matches, selectedFields, leagueData]);
 
+  // Bild-Upload
   const handleImageUpload = e => {
     const file = e.target.files[0];
     if (file) {
@@ -60,76 +68,52 @@ export default function Results2social() {
     }
   };
 
-  const drawImageWithText = () => {
-    const canvas = canvasRef.current;
-    if (!canvas || !image) return;
-    const ctx = canvas.getContext('2d');
-    const img = new Image();
-    img.onload = () => {
-      canvas.width = img.width;
-      canvas.height = img.height;
-      ctx.drawImage(img, 0, 0);
-      ctx.fillStyle = 'white';
-      ctx.font = '24px Arial';
-      const lines = text.split('\n');
-      let y = 40;
-      lines.forEach(line => {
-        ctx.fillText(line, 20, y);
-        y += 30;
-      });
-    };
-    img.src = image;
+  // Drag-Events nur auf Overlay
+  const onMouseDown = e => {
+    if (e.target !== overlayRef.current) return;
+    e.preventDefault();
+    setIsDragging(true);
+    setDragOffset({ x: e.clientX - boxPos.x, y: e.clientY - boxPos.y });
   };
+  const onMouseMove = e => isDragging && setBoxPos({ x: e.clientX - dragOffset.x, y: e.clientY - dragOffset.y });
+  const onMouseUp = () => setIsDragging(false);
 
-  const downloadImage = () => {
-    const canvas = canvasRef.current;
-    const link = document.createElement('a');
-    link.download = 'ergebnisse.png';
-    link.href = canvas.toDataURL();
-    link.click();
+  // Screenshot mit transparentem Overlay-Hintergrund
+  const generateImage = () => {
+    if (!containerRef.current || !overlayRef.current) return;
+    const origBg = overlayRef.current.style.background;
+    overlayRef.current.style.background = 'transparent';
+    html2canvas(containerRef.current).then(canvas => {
+      const link = document.createElement('a');
+      link.download = 'ergebnis_poster.png';
+      link.href = canvas.toDataURL();
+      link.click();
+    }).finally(() => {
+      overlayRef.current.style.background = origBg;
+    });
   };
 
   return (
-    <div className="p-4 grid gap-4">
+    <div className="p-4" onMouseMove={onMouseMove} onMouseUp={onMouseUp}>
       {/* Feld-Auswahl */}
       <div className="mb-4">
-        <select
-          multiple
-          value={selectedFields}
-          onChange={e => setSelectedFields([...e.target.selectedOptions].map(o => o.value))}
-          className="border p-2 rounded w-full h-24"
-        >
+        <select multiple value={selectedFields} onChange={e => setSelectedFields([...e.target.selectedOptions].map(o => o.value))} className="border p-2 rounded w-full h-24">
           {FIELD_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
         </select>
       </div>
-
-      {/* Uploader & Editor */}
-      <div className="bg-white p-4 rounded shadow">
+      {/* Upload & Overlay */}
+      <div className="bg-white p-4 rounded shadow mb-4">
         <input type="file" accept="image/*" onChange={handleImageUpload} />
         {image && (
-          <div className="flex flex-col gap-4 mt-4">
-            <Editor
-              apiKey={TINYMCE_API_KEY}
-              init={{
-                height: 200,
-                menubar: true,
-                toolbar: 'undo redo | bold italic underline | alignleft aligncenter alignright | bullist numlist',
-                plugins: ['lists', 'link'],
-                content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:16px; }'
-              }}
-              value={text}
-              onEditorChange={setText}
-            />
-            <button onClick={drawImageWithText} className="bg-blue-500 text-white px-4 py-2 rounded">
-              Vorschau generieren
-            </button>
-            <button onClick={downloadImage} className="bg-green-500 text-white px-4 py-2 rounded">
-              Fertiges Bild herunterladen
-            </button>
-            <canvas ref={canvasRef} className="border rounded shadow" />
+          <div ref={containerRef} className="relative inline-block mt-4">
+            <img src={image} alt="Hintergrund" className="max-w-full" />
+            <div ref={overlayRef} onMouseDown={onMouseDown} className="absolute" style={{ left: boxPos.x, top: boxPos.y, minWidth:150, background:'rgba(0,0,0,0.5)', cursor: isDragging ? 'grabbing' : 'grab' }}>
+              <Editor apiKey={TINYMCE_API_KEY} inline value={text} onEditorChange={setText} init={{ menubar:true, toolbar:'undo redo | bold italic underline | alignleft aligncenter alignright | bullist numlist', plugins:['lists','link'], content_style:'body{color:#fff;background:transparent;font-size:16px;}' }} />
+            </div>
           </div>
         )}
       </div>
+      <button onClick={generateImage} className="bg-blue-600 text-white px-4 py-2 rounded"> Fertiges Bild herunterladen </button>
     </div>
   );
 }
